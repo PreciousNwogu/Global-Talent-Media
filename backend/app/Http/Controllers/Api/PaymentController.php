@@ -18,7 +18,7 @@ class PaymentController extends Controller
     public function getBankDetails(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'booking_id' => 'required|exists:bookings,id',
+            'booking_reference' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -28,7 +28,9 @@ class PaymentController extends Controller
             ], 422);
         }
 
-        $booking = Booking::with('event')->findOrFail($request->booking_id);
+        $booking = Booking::with('event')
+            ->where('booking_reference', $request->booking_reference)
+            ->firstOrFail();
 
         // Bank transfer details - these should be in your config/env
         $bankDetails = [

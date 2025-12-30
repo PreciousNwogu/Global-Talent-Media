@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const Header = () => {
+  const { isAdmin, isAuthenticated } = useAuth();
+
   return (
     <header className="bg-white shadow-md">
       <nav className="container mx-auto px-4 py-4">
@@ -15,9 +18,12 @@ const Header = () => {
             <Link to="/events" className="text-gray-700 hover:text-gray-900">
               Events
             </Link>
-            <Link to="/admin" className="text-gray-700 hover:text-gray-900">
-              Admin
-            </Link>
+            {/* Only show Admin link to authenticated admin users */}
+            {isAdmin && (
+              <Link to="/admin" className="text-gray-700 hover:text-gray-900">
+                Admin
+              </Link>
+            )}
           </div>
         </div>
       </nav>

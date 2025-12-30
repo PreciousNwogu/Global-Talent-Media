@@ -69,7 +69,7 @@ class DashboardController extends Controller
             ->get();
 
         // Revenue by event (top 10)
-        $revenueByEvent = Payment::where('status', 'succeeded')
+        $revenueByEvent = Payment::where('payments.status', 'succeeded')
             ->join('bookings', 'payments.booking_id', '=', 'bookings.id')
             ->join('events', 'bookings.event_id', '=', 'events.id')
             ->select(

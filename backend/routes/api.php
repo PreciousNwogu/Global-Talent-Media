@@ -6,12 +6,26 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FileUploadController;
 use App\Http\Controllers\Admin\EventManagementController;
 use App\Http\Controllers\Admin\BookingManagementController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Models\Event;
 
 // Public routes (no authentication required)
+// Auth routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // File upload routes (authenticated)
+    Route::post('/upload/image', [FileUploadController::class, 'uploadImage']);
+    Route::post('/upload/images', [FileUploadController::class, 'uploadImages']);
+});
+
+// Public routes
 Route::prefix('events')->group(function () {
     Route::get('/', [EventController::class, 'index']);
     Route::get('/{id}', [EventController::class, 'show']);

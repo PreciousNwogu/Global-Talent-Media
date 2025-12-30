@@ -19,6 +19,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle 401 Unauthorized - token expired or invalid
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token');
+      // Redirect to login if not already there
+      if (window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Events API
 export const eventsApi = {
   getAll: (params) => api.get('/events', { params }),
@@ -43,7 +59,60 @@ export const bookingsApi = {
 
 // Payments API
 export const paymentsApi = {
-  getBankDetails: (bookingId) => api.post('/payments/bank-details', { booking_id: bookingId }),
+  getBankDetails: (bookingReference) => api.post('/payments/bank-details', { booking_reference: bookingReference }),
+};
+
+// Auth API
+export const authApi = {
+  login: (email, password) => api.post('/login', { email, password }),
+  logout: () => api.post('/logout'),
+  getUser: () => api.get('/user'),
+};
+
+// File Upload API
+export const uploadApi = {
+  uploadImage: (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post('/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  uploadImages: (files) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('images[]', file);
+    });
+    return api.post('/upload/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+// Admin API
+export const adminApi = {
+  // Dashboard
+  getStats: () => api.get('/admin/dashboard/stats'),
+  getRevenue: () => api.get('/admin/dashboard/revenue'),
+  
+  // Events
+  getAllEvents: (params) => api.get('/admin/events', { params }),
+  getEvent: (id) => api.get(`/admin/events/${id}`),
+  createEvent: (data) => api.post('/admin/events', data),
+  updateEvent: (id, data) => api.put(`/admin/events/${id}`, data),
+  deleteEvent: (id) => api.delete(`/admin/events/${id}`),
+  publishEvent: (id) => api.post(`/admin/events/${id}/publish`),
+  unpublishEvent: (id) => api.post(`/admin/events/${id}/unpublish`),
+  
+  // Bookings
+  getAllBookings: (params) => api.get('/admin/bookings', { params }),
+  getBooking: (id) => api.get(`/admin/bookings/${id}`),
+  updateBooking: (id, data) => api.put(`/admin/bookings/${id}`, data),
+  exportBookings: (params) => api.post('/admin/bookings/export', params),
 };
 
 export default api;

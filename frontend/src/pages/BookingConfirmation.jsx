@@ -14,46 +14,35 @@ const BookingConfirmation = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Try to load by reference first, then by ID
-    if (reference) {
+    // Load by reference (id in URL is actually the booking reference)
+    if (reference || id) {
       loadBookingByReference();
-    } else if (id) {
-      loadBankDetails(id);
     }
   }, [id, reference]);
 
   const loadBookingByReference = async () => {
     try {
-      const response = await bookingsApi.getByReference(reference);
+      const bookingRef = reference || id;
+      const response = await bookingsApi.getByReference(bookingRef);
       setBooking(response.data);
-      // Load bank details using booking ID
-      if (response.data.id) {
-        await loadBankDetails(response.data.id);
-      } else {
-        setLoading(false);
-      }
+      // Load bank details using booking reference
+      await loadBankDetails(response.data.booking_reference);
+      setLoading(false);
     } catch (error) {
       console.error('Error loading booking:', error);
-      // Fallback to loading by ID
-      if (id) {
-        loadBankDetails(id);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
-  const loadBankDetails = async (bookingId = id) => {
+  const loadBankDetails = async (bookingReference) => {
     try {
-      const response = await paymentsApi.getBankDetails(bookingId);
+      const response = await paymentsApi.getBankDetails(bookingReference);
       setBankDetails(response.data);
       if (response.data.booking && !booking) {
         setBooking(response.data.booking);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error loading bank details:', error);
-      setLoading(false);
     }
   };
 
