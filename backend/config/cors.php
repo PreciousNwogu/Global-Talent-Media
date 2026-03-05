@@ -19,11 +19,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        env('FRONTEND_URL', 'http://localhost:5173'),
-        'http://localhost:5173',
-        'http://localhost:3000',
-    ],
+    'allowed_origins' => array_filter(array_unique(array_merge(
+        // Primary frontend URL
+        [env('FRONTEND_URL', 'http://localhost:5173')],
+        // Optional extra comma-separated origins e.g. CORS_ALLOWED_ORIGINS=https://a.com,https://b.com
+        array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', ''))),
+        // Always allow local dev
+        ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5080'],
+    ))),
 
     'allowed_origins_patterns' => [],
 

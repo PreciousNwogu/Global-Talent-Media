@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { bookingsApi, paymentsApi } from '../services/api';
 import { formatDate, formatDateTime, formatCurrency } from '../utils/formatters';
 import Loading from '../components/Common/Loading';
@@ -85,6 +86,22 @@ const BookingConfirmation = () => {
           <p className="text-lg font-semibold text-gray-800 mt-4">
             Booking Reference: <span className="text-blue-600">{booking.booking_reference}</span>
           </p>
+        </div>
+
+        {/* QR Code Ticket */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col items-center text-center">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-1">Your Ticket</h2>
+          <p className="text-gray-500 text-sm mb-4">Show this QR code at the venue entrance</p>
+          <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg inline-block">
+            <QRCodeSVG
+              value={`GTM:${booking.booking_reference}:${booking.customer_email}`}
+              size={160}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+          <p className="mt-3 font-mono text-sm text-gray-600 tracking-widest">{booking.booking_reference}</p>
+          <p className="text-xs text-gray-400 mt-1">{booking.ticket_quantity} ticket{booking.ticket_quantity > 1 ? 's' : ''} · {booking.event?.title}</p>
         </div>
 
         {/* Booking Details */}

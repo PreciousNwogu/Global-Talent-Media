@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { eventsApi } from '../services/api';
 import EventCard from '../components/Events/EventCard';
+import HeroCarousel from '../components/HeroCarousel';
 import Loading from '../components/Common/Loading';
 
 const Home = () => {
+  const [carouselEvents, setCarouselEvents] = useState([]);
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,23 +18,23 @@ const Home = () => {
   const loadEvents = async () => {
     try {
       setLoading(true);
-      
-      // Load featured events
+
+      // Carousel: first 6 upcoming events with category data
+      const carouselRes = await eventsApi.getAll({ per_page: 6 });
+      const carouselData = carouselRes.data.data || carouselRes.data;
+      setCarouselEvents(Array.isArray(carouselData) ? carouselData : []);
+
+      // Featured events for the grid section
       const featuredResponse = await eventsApi.getAll({ featured: 'true', per_page: 3 });
       const featuredData = featuredResponse.data.data || featuredResponse.data;
-      const featuredArray = Array.isArray(featuredData) ? featuredData : [];
-      console.log('Featured events:', featuredArray);
-      setFeaturedEvents(featuredArray);
-      
-      // Load upcoming events
+      setFeaturedEvents(Array.isArray(featuredData) ? featuredData : []);
+
+      // Upcoming events grid
       const upcomingResponse = await eventsApi.getAll({ per_page: 6 });
       const upcomingData = upcomingResponse.data.data || upcomingResponse.data;
-      const upcomingArray = Array.isArray(upcomingData) ? upcomingData : [];
-      console.log('Upcoming events:', upcomingArray);
-      setUpcomingEvents(upcomingArray);
+      setUpcomingEvents(Array.isArray(upcomingData) ? upcomingData : []);
     } catch (error) {
       console.error('Error loading events:', error);
-      console.error('Error details:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -44,19 +46,8 @@ const Home = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-4">Welcome to Global Talent Media Hub</h1>
-          <p className="text-xl mb-8">Discover and book amazing talent events</p>
-          <Link
-            to="/events"
-            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block"
-          >
-            Browse Events
-          </Link>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel events={carouselEvents} />
 
       {/* Featured Events */}
       {featuredEvents.length > 0 && (

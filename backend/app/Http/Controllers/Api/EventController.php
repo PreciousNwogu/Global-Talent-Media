@@ -39,9 +39,30 @@ class EventController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
+        // Filter by date range
+        if ($request->has('date_from')) {
+            $query->where('starts_at', '>=', $request->date_from);
+        }
+        if ($request->has('date_to')) {
+            $query->where('starts_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
+        // Filter by price range
+        if ($request->has('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        // Filter by location (partial match)
+        if ($request->has('location') && $request->location) {
+            $query->where('location', 'like', '%' . $request->location . '%');
+        }
+
         // Pagination
         $perPage = $request->get('per_page', 12);
-        $events = $query->paginate($perPage);
+        $events  = $query->paginate($perPage);
 
         return response()->json($events);
     }

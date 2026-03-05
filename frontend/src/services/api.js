@@ -19,6 +19,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Auth API
+export const authApi = {
+  register: (data) => api.post('/auth/register', data),
+  login:    (data) => api.post('/auth/login', data),
+  logout:   ()     => api.post('/auth/logout'),
+  me:       ()     => api.get('/auth/me'),
+};
+
 // Events API
 export const eventsApi = {
   getAll: (params) => api.get('/events', { params }),
@@ -44,6 +52,35 @@ export const bookingsApi = {
 // Payments API
 export const paymentsApi = {
   getBankDetails: (bookingId) => api.post('/payments/bank-details', { booking_id: bookingId }),
+};
+
+// Admin CMS API
+export const adminApi = {
+  // Dashboard
+  getStats:      ()         => api.get('/admin/dashboard/stats'),
+  getRevenue:    ()         => api.get('/admin/dashboard/revenue'),
+
+  // Events
+  getEvents:     (params)   => api.get('/admin/events', { params }),
+  createEvent:   (data)     => api.post('/admin/events', data),
+  updateEvent:   (id, data) => api.put(`/admin/events/${id}`, data),
+  deleteEvent:   (id)       => api.delete(`/admin/events/${id}`),
+  publishEvent:  (id)       => api.post(`/admin/events/${id}/publish`),
+  unpublishEvent:(id)       => api.post(`/admin/events/${id}/unpublish`),
+
+  // Bookings
+  getBookings:   (params)   => api.get('/admin/bookings', { params }),
+  updateBooking: (id, data) => api.put(`/admin/bookings/${id}`, data),
+
+  // Categories
+  getCategories:   ()         => api.get('/admin/categories'),
+  createCategory:  (data)     => api.post('/admin/categories', data),
+  updateCategory:  (id, data) => api.put(`/admin/categories/${id}`, data),
+  deleteCategory:  (id)       => api.delete(`/admin/categories/${id}`),
+
+  // Users
+  getUsers:     ()   => api.get('/admin/users'),
+  toggleAdmin:  (id) => api.put(`/admin/users/${id}/toggle-admin`),
 };
 
 export default api;
