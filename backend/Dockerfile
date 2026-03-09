@@ -9,7 +9,8 @@ RUN composer install \
     --no-progress \
     --prefer-dist \
     --optimize-autoloader \
-    --ignore-platform-reqs
+    --ignore-platform-reqs \
+    --no-scripts
 
 # ─── Stage 2: Production image ────────────────────────────────────────────────
 FROM php:8.3-fpm-alpine
