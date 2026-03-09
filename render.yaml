@@ -6,6 +6,13 @@
 #   2. Go to render.com → New → Blueprint → select this repo
 #   3. Render will create both services automatically
 
+databases:
+  - name: gtmh-db
+    databaseName: gtmh
+    user: gtmh
+    plan: free
+    region: oregon
+
 services:
   # ── Laravel API + Filament Admin ──────────────────────────────────────────
   - type: web
@@ -30,19 +37,29 @@ services:
       - key: APP_URL
         value: https://gtmh-backend.onrender.com   # update after first deploy
 
-      # Database — set after creating the Render MySQL / PlanetScale DB
+      # Database — auto-wired from the Render PostgreSQL instance above
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
-        sync: false                   # set manually in Render dashboard
+        fromDatabase:
+          name: gtmh-db
+          property: host
       - key: DB_PORT
-        value: "3306"
+        fromDatabase:
+          name: gtmh-db
+          property: port
       - key: DB_DATABASE
-        sync: false                   # set manually
+        fromDatabase:
+          name: gtmh-db
+          property: database
       - key: DB_USERNAME
-        sync: false                   # set manually
+        fromDatabase:
+          name: gtmh-db
+          property: user
       - key: DB_PASSWORD
-        sync: false                   # set manually
+        fromDatabase:
+          name: gtmh-db
+          property: password
 
       - key: FILESYSTEM_DISK
         value: public
