@@ -35,11 +35,6 @@ RUN apk add --no-cache \
     && docker-php-ext-install gd \
     # Other required extensions
     && docker-php-ext-install bcmath opcache intl zip exif pcntl \
-    # Redis (optional – comment out if not using Redis)
-    && apk add --no-cache $PHPIZE_DEPS \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS \
     # Cleanup
     && rm -rf /var/cache/apk/*
 
