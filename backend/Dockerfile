@@ -23,7 +23,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions
 
 # ── System packages + PHP extensions (pre-compiled — no source compilation) ───
 RUN apk add --no-cache nginx supervisor curl bash gettext \
-    && install-php-extensions pdo_pgsql gd bcmath opcache intl zip exif pcntl \
+    && install-php-extensions pdo_mysql pdo_pgsql gd bcmath opcache intl zip exif pcntl \
     && rm -rf /var/cache/apk/*
 
 # ── PHP config ─────────────────────────────────────────────────────────────────
