@@ -1,24 +1,59 @@
+# ── Logs ───────────────────────────────────────────────────
 *.log
-.DS_Store
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# ── Environment & Secrets ──────────────────────────────────
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
-.phpactor.json
+.env.staging
+
+# Private keys & certificates
+/storage/*.key
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# Auth / credential files
+/auth.json
+
+# ── Laravel cache & generated files ────────────────────────
 .phpunit.result.cache
+/.phpunit.cache
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/pail
+
+# ── Dependencies & build ───────────────────────────────────
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+
+# ── Homestead (local dev VMs) ──────────────────────────────
+Homestead.json
+Homestead.yaml
+
+# ── IDE & OS ───────────────────────────────────────────────
 /.fleet
 /.idea
 /.nova
 /.phpunit.cache
 /.vscode
 /.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-Homestead.json
-Homestead.yaml
+.phpactor.json
+.DS_Store
 Thumbs.db
