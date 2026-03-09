@@ -17,25 +17,13 @@ FROM php:8.3-fpm-alpine
 
 LABEL maintainer="Global Talent Media Hub"
 
-# ── System dependencies ────────────────────────────────────────────────────────
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
-    curl \
-    zip \
-    unzip \
-    git \
-    bash \
-    gettext \
-    # MySQL / PDO
-    && docker-php-ext-install pdo pdo_mysql \
-    # Image processing (Filament)
-    && apk add --no-cache freetype libpng libjpeg-turbo freetype-dev libpng-dev libjpeg-turbo-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd \
-    # Other required extensions
-    && docker-php-ext-install bcmath opcache intl zip exif pcntl \
-    # Cleanup
+# ── Use install-php-extensions for fast pre-compiled extension installs ────────
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod +x /usr/local/bin/install-php-extensions
+
+# ── System packages + PHP extensions (pre-compiled — no source compilation) ───
+RUN apk add --no-cache nginx supervisor curl bash gettext \
+    && install-php-extensions pdo_mysql gd bcmath opcache intl zip exif pcntl \
     && rm -rf /var/cache/apk/*
 
 # ── PHP config ─────────────────────────────────────────────────────────────────
