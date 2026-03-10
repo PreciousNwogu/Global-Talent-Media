@@ -20,8 +20,14 @@ if [ -n "$DATABASE_URL" ] && [ -z "$DB_HOST" ]; then
     export DB_PASSWORD="${_userinfo#*:}"
     # Extract host:port/database
     _hostport="${_rest%%/*}"
-    export DB_HOST="${_hostport%%:*}"
-    export DB_PORT="${_hostport##*:}"
+    # Only split on colon if a port is actually present
+    if echo "$_hostport" | grep -q ':'; then
+        export DB_HOST="${_hostport%%:*}"
+        export DB_PORT="${_hostport##*:}"
+    else
+        export DB_HOST="$_hostport"
+        export DB_PORT="5432"
+    fi
     export DB_DATABASE="${_rest#*/}"
     # Remove query string if any
     export DB_DATABASE="${DB_DATABASE%%\?*}"
