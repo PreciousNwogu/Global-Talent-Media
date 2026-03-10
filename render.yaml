@@ -40,6 +40,10 @@ services:
       # Database — auto-wired from the Render PostgreSQL instance above
       - key: DB_CONNECTION
         value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gtmh-db
+          property: connectionString
       - key: DB_HOST
         fromDatabase:
           name: gtmh-db
