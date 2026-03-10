@@ -14,15 +14,15 @@ databases:
     region: oregon
 
 services:
-  # ── Laravel API + Filament Admin ──────────────────────────────────────────
+  # ── Single service: Laravel API + Filament + React SPA ────────────────────
   - type: web
     name: gtmh-backend
     runtime: docker
-    dockerfilePath: backend/Dockerfile
-    dockerContext: backend
-    region: oregon                    # change to: frankfurt, singapore, ohio, etc.
-    plan: starter                     # starter / standard / pro
-    healthCheckPath: /up              # Laravel's built-in health endpoint
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: starter
+    healthCheckPath: /up
     autoDeploy: true
 
     envVars:
@@ -84,30 +84,16 @@ services:
       - key: MAIL_USERNAME
         value: info@globaltalentmediahub.co.uk
       - key: MAIL_PASSWORD
-        sync: false                   # set manually
+        sync: false
       - key: MAIL_FROM_ADDRESS
         value: info@globaltalentmediahub.co.uk
       - key: MAIL_FROM_NAME
         value: "Global Talent Media Hub"
 
-      # CORS — update to production frontend URL
+      # CORS — same domain (frontend served from same service)
       - key: FRONTEND_URL
-        value: https://globaltalentmediahub.co.uk
+        value: https://gtmh-backend.onrender.com
       - key: SANCTUM_STATEFUL_DOMAINS
-        value: globaltalentmediahub.co.uk,www.globaltalentmediahub.co.uk
+        value: gtmh-backend.onrender.com
       - key: CORS_ALLOWED_ORIGINS
-        value: https://globaltalentmediahub.co.uk
-
-  # ── React / Vite Frontend ─────────────────────────────────────────────────
-  - type: web
-    name: gtmh-frontend
-    runtime: docker
-    dockerfilePath: frontend/Dockerfile
-    dockerContext: frontend
-    region: oregon
-    plan: starter
-    autoDeploy: true
-
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: https://gtmh-backend.onrender.com/api   # update after backend deploy
+        value: https://gtmh-backend.onrender.com
