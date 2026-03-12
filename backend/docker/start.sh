@@ -49,6 +49,9 @@ php artisan event:cache
 # Run any pending migrations
 php artisan migrate --force
 
+# Seed database (safe — EventSeeder uses updateOrCreate, no duplicates)
+php artisan db:seed --force
+
 # Create storage symlink (safe if already exists)
 php artisan storage:link || true
 
