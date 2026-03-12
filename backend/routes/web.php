@@ -9,7 +9,7 @@ Route::get('/', function () {
 
 // Direct (non-Livewire) media upload — used by the admin event form
 Route::post('/admin/media/upload', [MediaUploadController::class, 'upload'])
-    ->middleware(['web', 'auth'])
+    ->middleware(['web', \Filament\Http\Middleware\Authenticate::class])
     ->name('admin.media.upload');
 
 require __DIR__.'/auth.php';
