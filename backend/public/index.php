@@ -1,5 +1,10 @@
 <?php
 
+// Prevent PHP warnings/notices from being injected into AJAX/JSON responses.
+// Errors are still logged via Laravel; Ignition handles debug pages.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
