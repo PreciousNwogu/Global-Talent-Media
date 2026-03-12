@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Forms\Components\MediaUploader;
 use App\Filament\Resources\EventResource\Pages;
 use App\Models\Category;
 use App\Models\Event;
@@ -10,7 +11,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class EventResource extends Resource
@@ -118,31 +118,27 @@ class EventResource extends Resource
                         // Cover Image
                         Forms\Components\TextInput::make('cover_image')
                             ->label('Cover Image URL')
-                            ->helperText('Paste an online image URL — or upload a local file below to fill this automatically.')
-                            ->columnSpanFull()
-                            ->live(),
-
-                        Forms\Components\FileUpload::make('cover_image_file')
-                            ->label('Upload Cover Image (optional — saves on form submit)')
-                            ->image()
-                            ->disk('public')
-                            ->directory('events/covers')
-                            ->maxSize(10240)
-                            ->imagePreviewHeight('160')
+                            ->helperText('Paste an image URL, or use the upload button below to upload from your device.')
                             ->columnSpanFull(),
 
+                        MediaUploader::make('cover_image_uploader')
+                            ->label('Upload Cover Image from Device')
+                            ->targetField('cover_image')
+                            ->accept('image/jpeg,image/png,image/gif,image/webp')
+                            ->columnSpanFull()
+                            ->dehydrated(false),
 
                         // Video
                         Forms\Components\TextInput::make('video_url')
                             ->label('Video URL')
-                            ->helperText('Paste a YouTube / Vimeo / direct video URL — or upload a local file below.'),
+                            ->helperText('Paste a YouTube / Vimeo URL, or use the upload button below.'),
 
-                        Forms\Components\FileUpload::make('video_url_file')
-                            ->label('Upload Video File (optional — saves on form submit)')
-                            ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/*'])
-                            ->disk('public')
-                            ->directory('events/videos')
-                            ->maxSize(204800),
+                        MediaUploader::make('video_url_uploader')
+                            ->label('Upload Video from Device')
+                            ->targetField('video_url')
+                            ->accept('video/mp4,video/webm,video/ogg')
+                            ->columnSpanFull()
+                            ->dehydrated(false),
 
                     ]),
 
