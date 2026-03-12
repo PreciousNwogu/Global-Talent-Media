@@ -123,20 +123,14 @@ class EventResource extends Resource
                             ->live(),
 
                         Forms\Components\FileUpload::make('cover_image_file')
-                            ->label('Upload Cover Image')
+                            ->label('Upload Cover Image (optional — saves on form submit)')
                             ->image()
                             ->disk('public')
                             ->directory('events/covers')
                             ->maxSize(10240)
                             ->imagePreviewHeight('160')
-                            ->columnSpanFull()
-                            ->dehydrated(false)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                if ($state) {
-                                    $set('cover_image', Storage::disk('public')->url($state));
-                                }
-                            }),
+                            ->columnSpanFull(),
+
 
                         // Video
                         Forms\Components\TextInput::make('video_url')
@@ -144,18 +138,12 @@ class EventResource extends Resource
                             ->helperText('Paste a YouTube / Vimeo / direct video URL — or upload a local file below.'),
 
                         Forms\Components\FileUpload::make('video_url_file')
-                            ->label('Upload Video File')
+                            ->label('Upload Video File (optional — saves on form submit)')
                             ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/*'])
                             ->disk('public')
                             ->directory('events/videos')
-                            ->maxSize(204800)
-                            ->dehydrated(false)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                if ($state) {
-                                    $set('video_url', Storage::disk('public')->url($state));
-                                }
-                            }),
+                            ->maxSize(204800),
+
                     ]),
 
                 Forms\Components\Section::make('Terms & Conditions')
