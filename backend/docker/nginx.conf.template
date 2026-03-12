@@ -30,7 +30,7 @@ http {
         add_header X-Content-Type-Options "nosniff";
 
         # ── Laravel routes: API, admin, auth, health ──────────────────────────
-        location ~ ^/(api|admin|sanctum|up|livewire)(/.*)?$ {
+        location ~ ^/(api|admin|sanctum|up|livewire|filament)(/.*)?$ {
             try_files $uri $uri/ /index.php?$query_string;
         }
 

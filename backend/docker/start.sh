@@ -52,6 +52,9 @@ php artisan migrate --force
 # Seed database (safe — EventSeeder uses updateOrCreate, no duplicates)
 php artisan db:seed --force
 
+# Publish Filament assets
+php artisan filament:assets || true
+
 # Create storage symlink (safe if already exists)
 php artisan storage:link || true
 
