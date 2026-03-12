@@ -37,7 +37,7 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN chmod +x /usr/local/bin/install-php-extensions
 
 RUN apk add --no-cache nginx supervisor curl bash gettext \
-    && install-php-extensions pdo_mysql pdo_pgsql gd bcmath opcache intl zip exif pcntl \
+    && install-php-extensions pdo_mysql pdo_pgsql pdo_sqlite gd bcmath opcache intl zip exif pcntl \
     && rm -rf /var/cache/apk/*
 
 # ── PHP config ─────────────────────────────────────────────────────────────────
@@ -53,9 +53,21 @@ WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
 COPY backend/ .
 
+# ── Publish Filament CSS/JS assets into public/ ───────────────────────────────
+# Must run BEFORE the React copy so the /css/filament and /js/filament dirs
+# are present in the image. No DB needed for this command.
+# Provide a temporary APP_KEY so Laravel can boot without real env vars.
+RUN APP_KEY=base64:$(openssl rand -base64 32) \
+    APP_ENV=production \
+    DB_CONNECTION=sqlite \
+    DB_DATABASE=":memory:" \
+    php artisan filament:assets --ansi \
+    || php artisan vendor:publish --tag=filament-assets --force --ansi \
+    || true
+
 # ── Copy built React app into Laravel's public directory ──────────────────────
-# React's index.html and assets land alongside Laravel's index.php
-# Nginx serves index.html for SPA routes, index.php for API/admin routes
+# React/Vite outputs to dist/index.html + dist/assets/*, so it does NOT
+# overwrite public/css/ or public/js/ — Filament assets remain intact.
 COPY --from=frontend-builder /app/dist/ ./public/
 
 # ── Permissions ───────────────────────────────────────────────────────────────
