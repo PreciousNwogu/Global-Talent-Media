@@ -3,6 +3,7 @@
     $accept       = $field->getAccept();
     $label        = $field->getLabel();
     $uploadUrl    = route('admin.media.upload');
+    $csrfToken    = csrf_token();
 @endphp
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
@@ -22,9 +23,14 @@
                 try {
                     const fd = new FormData();
                     fd.append('file', file);
-                    fd.append('_token', document.querySelector('meta[name=csrf-token]').content);
+                    fd.append('_token', '{{ $csrfToken }}');
                     const res  = await fetch('{{ $uploadUrl }}', { method: 'POST', body: fd });
-                    const json = await res.json();
+                    const text = await res.text();
+                    let json;
+                    try { json = JSON.parse(text); } catch(ex) {
+                        this.error = 'Server error: ' + text.substring(0, 200);
+                        return;
+                    }
                     if (json.url) {
                         $wire.set('data.{{ $targetField }}', json.url);
                         this.done = true;
