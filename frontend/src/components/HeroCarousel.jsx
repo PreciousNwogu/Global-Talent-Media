@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { resolveMediaUrl } from '../utils/media';
 
 // Per-slide color tints applied over the video
 const THEMES = [
@@ -68,7 +69,7 @@ const HeroCarousel = ({ events = [] }) => {
       {event?.cover_image ? (
         <img
           key={`bg-${current}`}
-          src={event.cover_image}
+          src={resolveMediaUrl(event.cover_image)}
           alt={event?.title ?? ''}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ animation: 'bgZoom 8s ease-out forwards', filter: 'brightness(0.6) saturate(1.2)' }}

@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 // Direct (non-Livewire) media upload — used by the admin event form
-Route::post('/admin/media/upload', [MediaUploadController::class, 'upload'])
+Route::match(['post', 'put'], '/admin/media/upload', [MediaUploadController::class, 'upload'])
     ->middleware(['web', \Filament\Http\Middleware\Authenticate::class])
     ->name('admin.media.upload');
 

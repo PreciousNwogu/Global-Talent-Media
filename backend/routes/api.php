@@ -92,7 +92,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     });
 
     // File uploads (images / videos for events)
-    Route::post('/upload', [UploadController::class, 'store']);
+    Route::match(['post', 'put'], '/upload', [UploadController::class, 'store']);
 
     // User management (list users, toggle admin)
     Route::get('/users', function () {

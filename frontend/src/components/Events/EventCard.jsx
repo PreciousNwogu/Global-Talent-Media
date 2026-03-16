@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatDate, formatCurrency } from '../../utils/formatters';
+import { resolveMediaUrl } from '../../utils/media';
 
 const EventCard = ({ event }) => {
   if (!event) {
@@ -12,7 +13,7 @@ const EventCard = ({ event }) => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
         {event.cover_image && (
           <img
-            src={event.cover_image}
+            src={resolveMediaUrl(event.cover_image)}
             alt={event.title || 'Event'}
             className="w-full h-48 object-cover"
             onError={(e) => {

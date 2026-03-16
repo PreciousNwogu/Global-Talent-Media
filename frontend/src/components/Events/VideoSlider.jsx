@@ -1,36 +1,63 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { resolveMediaUrl } from '../../utils/media';
 
 const VideoSlider = ({ event }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [failedMediaUrls, setFailedMediaUrls] = useState([]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setFailedMediaUrls([]);
+  }, [event?.id]);
+
+  const isEmbedVideoUrl = (url) => {
+    if (!url) return false;
+    return url.includes('youtube.com/embed/') || url.includes('player.vimeo.com/video/');
+  };
 
   // Combine video and gallery images into a slideshow array
   const slides = [];
   
   // Add video as first slide if available
   if (event.video_url) {
-    slides.push({
-      type: 'video',
-      url: event.video_url,
-    });
+    const resolvedVideoUrl = resolveMediaUrl(event.video_url);
+
+    if (!failedMediaUrls.includes(resolvedVideoUrl)) {
+      slides.push({
+        type: 'video',
+        url: resolvedVideoUrl,
+        isEmbed: isEmbedVideoUrl(resolvedVideoUrl),
+      });
+    }
   }
   
   // Add cover image
   if (event.cover_image) {
     slides.push({
       type: 'image',
-      url: event.cover_image,
+      url: resolveMediaUrl(event.cover_image),
     });
   }
   
   // Add gallery images
   if (event.gallery_images && Array.isArray(event.gallery_images)) {
     event.gallery_images.forEach((img) => {
-      slides.push({
-        type: 'image',
-        url: img,
-      });
+      const resolvedImageUrl = resolveMediaUrl(img);
+
+      if (!failedMediaUrls.includes(resolvedImageUrl)) {
+        slides.push({
+          type: 'image',
+          url: resolvedImageUrl,
+        });
+      }
     });
   }
+
+  useEffect(() => {
+    if (currentIndex >= slides.length) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, slides.length]);
 
   if (slides.length === 0) {
     return (
@@ -54,26 +81,41 @@ const VideoSlider = ({ event }) => {
 
   const currentSlide = slides[currentIndex];
 
+  const hideFailedSlide = (url) => {
+    setFailedMediaUrls((prev) => (prev.includes(url) ? prev : [...prev, url]));
+    setCurrentIndex(0);
+  };
+
   return (
     <div className="relative w-full h-96 md:h-[500px] rounded-lg overflow-hidden bg-black">
       {/* Video/Image Display */}
       {currentSlide.type === 'video' ? (
-        <iframe
-          src={currentSlide.url}
-          className="w-full h-full"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="Event video"
-        ></iframe>
+        currentSlide.isEmbed ? (
+          <iframe
+            src={currentSlide.url}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Event video"
+            onError={() => hideFailedSlide(currentSlide.url)}
+          ></iframe>
+        ) : (
+          <video
+            src={currentSlide.url}
+            controls
+            className="w-full h-full object-cover"
+            onError={() => hideFailedSlide(currentSlide.url)}
+          >
+            Your browser does not support the video tag.
+          </video>
+        )
       ) : (
         <img
           src={currentSlide.url}
           alt={`Event slide ${currentIndex + 1}`}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/1200x600?text=Event+Image';
-          }}
+          onError={() => hideFailedSlide(currentSlide.url)}
         />
       )}
 

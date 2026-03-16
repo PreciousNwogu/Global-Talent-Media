@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { adminApi } from '../../services/api';
 import { categoriesApi } from '../../services/api';
@@ -61,27 +61,41 @@ const EventForm = () => {
 
   // Upload a local file to the backend and return the public URL
   const uploadFile = async (file, type = 'image') => {
-    const data = new FormData();
-    data.append('file', file);
-    data.append('type', type);
     const token = localStorage.getItem('auth_token');
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
     const res = await fetch(`${baseUrl}/admin/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: data,
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'X-Upload-Type': type,
+        'X-Filename': encodeURIComponent(file.name),
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+      body: file,
     });
-    if (!res.ok) throw new Error('Upload failed');
-    const json = await res.json();
+
+    const text = await res.text();
+    let json;
+
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error(text.slice(0, 300) || 'Upload failed');
+    }
+
+    if (!res.ok) {
+      const message = json.message ?? (json.errors ? Object.values(json.errors).flat().join(' ') : 'Upload failed');
+      throw new Error(message);
+    }
+
     return json.url;
   };
 
-  // A field that accepts either a pasted URL or a local file upload
+  // A field that uploads media from device only.
   const MediaField = ({ label, field, accept = 'image/*', type = 'image' }) => {
-    const [tab, setTab]       = useState(form[field] ? 'url' : 'url');
     const [uploading, setUploading] = useState(false);
     const [uploadErr, setUploadErr] = useState('');
-    const fileRef = useRef();
 
     const handleFile = async (e) => {
       const file = e.target.files?.[0];
@@ -91,9 +105,8 @@ const EventForm = () => {
       try {
         const url = await uploadFile(file, type);
         setForm((prev) => ({ ...prev, [field]: url }));
-        setTab('url');
-      } catch {
-        setUploadErr('Upload failed. Check file size or try again.');
+      } catch (err) {
+        setUploadErr(err.message || 'Upload failed. Check file size or try again.');
       } finally {
         setUploading(false);
       }
@@ -102,42 +115,19 @@ const EventForm = () => {
     return (
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">{label}</label>
-        {/* Tab toggle */}
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden w-fit text-xs font-medium">
-          {['url', 'file'].map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 transition-colors ${
-                tab === t ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              {t === 'url' ? 'Online URL' : 'Upload File'}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            accept={accept}
+            onChange={handleFile}
+            className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-medium hover:file:bg-blue-100 cursor-pointer"
+          />
+          {uploading && <span className="text-xs text-blue-500 animate-pulse">Uploading…</span>}
         </div>
 
-        {tab === 'url' ? (
-          <input
-            type="url"
-            placeholder="https://..."
-            value={form[field]}
-            onChange={set(field)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        ) : (
-          <div className="flex items-center gap-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept={accept}
-              onChange={handleFile}
-              className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-medium hover:file:bg-blue-100 cursor-pointer"
-            />
-            {uploading && <span className="text-xs text-blue-500 animate-pulse">Uploading…</span>}
-          </div>
-        )}
+        <p className="text-xs text-gray-500">
+          Upload from your device. URL input is disabled.
+        </p>
 
         {uploadErr && <p className="text-xs text-red-500">{uploadErr}</p>}
 

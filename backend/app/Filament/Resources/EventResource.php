@@ -115,30 +115,23 @@ class EventResource extends Resource
                 Forms\Components\Section::make('Media')
                     ->columns(2)
                     ->schema([
-                        // Cover Image
-                        Forms\Components\TextInput::make('cover_image')
-                            ->label('Cover Image URL')
-                            ->helperText('Paste an image URL, or use the upload button below to upload from your device.')
-                            ->columnSpanFull(),
+                        Forms\Components\Hidden::make('cover_image'),
 
                         MediaUploader::make('cover_image_uploader')
-                            ->label('Upload Cover Image from Device')
+                            ->label('Cover Image')
                             ->targetField('cover_image')
-                            ->accept('image/jpeg,image/png,image/gif,image/webp')
+                            ->accept('image/avif,image/jpeg,image/png,image/gif,image/webp')
                             ->columnSpanFull()
-                            ->dehydrated(false),
+                            ->helperText('Upload AVIF, JPG, PNG, GIF, or WEBP (max 5MB).'),
 
-                        // Video
-                        Forms\Components\TextInput::make('video_url')
-                            ->label('Video URL')
-                            ->helperText('Paste a YouTube / Vimeo URL, or use the upload button below.'),
+                        Forms\Components\Hidden::make('video_url'),
 
                         MediaUploader::make('video_url_uploader')
-                            ->label('Upload Video from Device')
+                            ->label('Promo Video')
                             ->targetField('video_url')
-                            ->accept('video/mp4,video/webm,video/ogg')
+                            ->accept('video/mp4,video/webm,video/ogg,video/quicktime')
                             ->columnSpanFull()
-                            ->dehydrated(false),
+                            ->helperText('Upload MP4, WEBM, OGG, or MOV (max 200MB).'),
 
                     ]),
 

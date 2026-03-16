@@ -24,7 +24,7 @@ class EventSeeder extends Seeder
 
         // Get or create a user for event creator
         $user = User::updateOrCreate(
-            ['email' => 'admin@globaltalentmedia.com'],
+            ['email' => 'info@globaltalentmediahub.co.uk'],
             [
                 'name' => 'Admin User',
                 'password' => bcrypt('password'), // Default password, change in production

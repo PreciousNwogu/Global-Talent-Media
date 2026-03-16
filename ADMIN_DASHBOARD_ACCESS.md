@@ -30,7 +30,7 @@ You can test admin endpoints directly using tools like Postman or curl:
    ```bash
    curl -X POST http://localhost:8000/api/login \
      -H "Content-Type: application/json" \
-     -d '{"email":"admin@globaltalentmedia.com","password":"your_password"}'
+   -d '{"email":"info@globaltalentmediahub.co.uk","password":"your_password"}'
    ```
 
 2. **Use token to access admin endpoints**:
@@ -88,7 +88,7 @@ All require authentication (`Bearer token`):
 ## Quick Access Info
 
 **Default Admin User** (from seeder):
-- Email: `admin@globaltalentmedia.com`
+- Email: `info@globaltalentmediahub.co.uk`
 - Password: `password` (default, should be changed!)
 
 **Note**: You'll need to log in through the API first to get a token, then use that token for admin endpoints.

@@ -64,9 +64,9 @@ return [
     */
 
     'temporary_file_upload' => [
-        'disk' => 'public',        // use the already-configured public disk
+        'disk' => 'livewire-tmp',  // dedicated disk for temporary upload chunks
         'rules' => ['required', 'file', 'max:204800'],  // up to 200 MB — covers video uploads
-        'directory' => 'livewire-tmp',  // sub-folder inside public disk
+        'directory' => null,
         'middleware' => null,  // Example: 'throttle:5,1'             | Default: 'throttle:60,1'
         'preview_mimes' => [   // Supported file types for temporary pre-signed file URLs...
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',

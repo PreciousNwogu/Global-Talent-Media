@@ -3,30 +3,39 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\MediaUploadHandler;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class UploadController extends Controller
 {
+    public function __construct(private readonly MediaUploadHandler $mediaUploadHandler)
+    {
+    }
+
     /**
      * Upload a file (image or video) and return its public URL.
-     * Accepts multipart/form-data with a 'file' field.
+     * Supports both multipart uploads and raw binary uploads.
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|max:204800', // up to 200 MB
-            'type' => 'nullable|in:image,video',
-        ]);
+        try {
+            $requestedType = $request->input('type') ?: $request->header('X-Upload-Type');
+            $upload = $this->mediaUploadHandler->store($request, $requestedType);
 
-        $type      = $request->input('type', 'image');
-        $directory = $type === 'video' ? 'events/videos' : 'events/covers';
+            return response()->json($upload);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $exception->errors(),
+            ], 422);
+        } catch (Throwable $exception) {
+            report($exception);
 
-        $path = $request->file('file')->store($directory, 'public');
-
-        return response()->json([
-            'url'  => Storage::disk('public')->url($path),
-            'path' => $path,
-        ]);
+            return response()->json([
+                'message' => 'Upload failed unexpectedly.',
+            ], 500);
+        }
     }
 }

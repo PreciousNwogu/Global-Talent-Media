@@ -21,21 +21,45 @@
                 this.error    = null;
                 this.filename = file.name;
                 try {
-                    const fd = new FormData();
-                    fd.append('file', file);
-                    fd.append('_token', '{{ $csrfToken }}');
-                    const res  = await fetch('{{ $uploadUrl }}', { method: 'POST', body: fd });
-                    const text = await res.text();
-                    let json;
-                    try { json = JSON.parse(text); } catch(ex) {
-                        this.error = 'Server error: ' + text.substring(0, 200);
+                    const uploadType = file.type.startsWith('video/') ? 'video' : 'image';
+                    const res  = await fetch('{{ $uploadUrl }}', {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ $csrfToken }}',
+                            'X-Upload-Type': uploadType,
+                            'X-Filename': encodeURIComponent(file.name),
+                            'Content-Type': file.type || 'application/octet-stream',
+                        },
+                        credentials: 'same-origin',
+                        body: file
+                    });
+
+                    const contentType = res.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        const text = await res.text();
+                        this.error = text.includes('POST Content-Length')
+                            ? 'File is larger than current PHP upload limits. Increase post_max_size and upload_max_filesize.'
+                            : `Unexpected server response: ${text.substring(0, 300)}`;
                         return;
                     }
-                    if (json.url) {
+
+                    const text = await res.text();
+                    let json;
+                    try {
+                        json = JSON.parse(text);
+                    } catch (parseError) {
+                        this.error = `Invalid JSON response: ${text.substring(0, 300)}`;
+                        return;
+                    }
+
+                    if (res.ok && json.url) {
                         $wire.set('data.{{ $targetField }}', json.url);
                         this.done = true;
                     } else {
-                        this.error = json.message ?? 'Upload failed.';
+                        this.error = json.message
+                            ?? (json.errors ? Object.values(json.errors).flat().join(' ') : 'Upload failed.');
                     }
                 } catch (err) {
                     this.error = err.message;
