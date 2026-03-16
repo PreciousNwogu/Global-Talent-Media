@@ -16,11 +16,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create admin user if it doesn't exist
-        User::firstOrCreate(
-            ['email' => 'admin@globaltalentmedia.com'],
+        User::updateOrCreate(
+            ['email' => 'info@globaltalentmediahub.co.uk'],
             [
                 'name' => 'Admin User',
                 'password' => bcrypt('password'), // Default password, change in production
+                'is_admin' => true,
             ]
         );
 

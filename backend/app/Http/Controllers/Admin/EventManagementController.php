@@ -55,6 +55,7 @@ class EventManagementController extends Controller
             'starts_at' => 'required|date',
             'ends_at' => 'required|date|after:starts_at',
             'cover_image' => 'nullable|string',
+            'video_url' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'capacity' => 'required|integer|min:1',
             'is_featured' => 'boolean',
@@ -72,7 +73,7 @@ class EventManagementController extends Controller
         $data['slug'] = Str::slug($data['title']) . '-' . time();
         $data['available_tickets'] = $data['capacity'];
         $data['status'] = 'draft';
-        $data['created_by'] = auth()->id();
+        $data['created_by'] = $request->user()?->id;
 
         $event = Event::create($data);
 
@@ -108,9 +109,9 @@ class EventManagementController extends Controller
             'venue_address' => 'nullable|string',
             'starts_at' => 'sometimes|required|date',
             'ends_at' => 'sometimes|required|date|after:starts_at',
-            'cover_image' => 'nullable|string|url',
+            'cover_image' => 'nullable|string',
             'gallery_images' => 'nullable|array',
-            'video_url' => 'nullable|string|url',
+            'video_url' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
             'capacity' => 'sometimes|required|integer|min:1',
             'status' => 'sometimes|in:draft,published,cancelled,sold_out',

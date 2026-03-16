@@ -8,8 +8,12 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Mail\BookingConfirmationMail;
+use App\Mail\BookingCancellationMail;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class BookingController extends Controller
 {
@@ -49,9 +53,18 @@ class BookingController extends Controller
         try {
             $totalAmount = $event->price * $request->ticket_quantity;
 
+            // Resolve user_id from Sanctum token if present (route is public for guest checkout)
+            $userId = null;
+            if ($request->bearerToken()) {
+                $accessToken = PersonalAccessToken::findToken($request->bearerToken());
+                if ($accessToken && $accessToken->tokenable_type === \App\Models\User::class) {
+                    $userId = $accessToken->tokenable_id;
+                }
+            }
+
             $booking = Booking::create([
-                'event_id' => $event->id,
-                'user_id' => Auth::id(),
+                'event_id'         => $event->id,
+                'user_id'          => $userId,
                 'customer_name' => $request->customer_name,
                 'customer_email' => $request->customer_email,
                 'customer_phone' => $request->customer_phone,
@@ -73,6 +86,14 @@ class BookingController extends Controller
 
             DB::commit();
 
+            // Send confirmation email (silently — don't fail booking if mail fails)
+            try {
+                Mail::to($booking->customer_email)
+                    ->send(new BookingConfirmationMail($booking->load('event')));
+            } catch (\Exception $mailEx) {
+                \Log::warning('Booking confirmation email failed: ' . $mailEx->getMessage());
+            }
+
             return response()->json([
                 'message' => 'Booking created successfully',
                 'booking' => $booking->load('event'),
@@ -91,8 +112,15 @@ class BookingController extends Controller
      */
     public function userBookings(): JsonResponse
     {
+        $user = Auth::user();
+
+        // Return bookings linked by user_id OR by matching customer_email
+        // (covers bookings made as a guest before/after account creation)
         $bookings = Booking::with(['event', 'payment'])
-            ->where('user_id', Auth::id())
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->orWhere('customer_email', $user->email);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -157,6 +185,14 @@ class BookingController extends Controller
             }
 
             DB::commit();
+
+            // Send cancellation email
+            try {
+                Mail::to($booking->customer_email)
+                    ->send(new BookingCancellationMail($booking->load('event')));
+            } catch (\Exception $mailEx) {
+                \Log::warning('Booking cancellation email failed: ' . $mailEx->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Booking cancelled successfully',

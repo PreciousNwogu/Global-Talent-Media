@@ -6,58 +6,81 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /**
-     * Handle a login request.
+     * Register a new user and return an API token.
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registration successful',
+            'user'    => $user,
+            'token'   => $token,
+        ], 201);
+    }
+
+    /**
+     * Log in and return an API token.
      */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'email'    => ['required', 'email'],
+            'password' => ['required'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        // Create a Sanctum token
-        $token = $user->createToken('admin-token')->plainTextToken;
+        $user  = $request->user();
+        $user->tokens()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
-            'token' => $token,
             'message' => 'Login successful',
+            'user'    => $user,
+            'token'   => $token,
         ]);
     }
 
     /**
-     * Get the authenticated user.
-     */
-    public function user(Request $request): JsonResponse
-    {
-        return response()->json($request->user());
-    }
-
-    /**
-     * Handle a logout request.
+     * Log out (revoke token).
      */
     public function logout(Request $request): JsonResponse
     {
-        // Delete the current access token
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Logged out successfully',
-        ]);
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    /**
+     * Return the authenticated user's profile.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json($request->user());
     }
 }
-

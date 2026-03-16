@@ -47,6 +47,14 @@ return [
             'report' => false,
         ],
 
+        // Required by Livewire (and Filament) for temporary file uploads
+        'livewire-tmp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/livewire-tmp'),
+            'serve' => true,
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

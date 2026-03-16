@@ -23,18 +23,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
-      // Redirect to login if not already there
-      if (window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/login')) {
-        window.location.href = '/admin/login';
+      localStorage.removeItem('auth_user');
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
   }
 );
 
+const normalizeLoginPayload = (credentialsOrEmail, password) => (
+  typeof credentialsOrEmail === 'object'
+    ? credentialsOrEmail
+    : { email: credentialsOrEmail, password }
+);
 // Events API
 export const eventsApi = {
   getAll: (params) => api.get('/events', { params }),
@@ -64,8 +68,10 @@ export const paymentsApi = {
 
 // Auth API
 export const authApi = {
-  login: (email, password) => api.post('/login', { email, password }),
-  logout: () => api.post('/logout'),
+  register: (data) => api.post('/auth/register', data),
+  login: (credentialsOrEmail, password) => api.post('/auth/login', normalizeLoginPayload(credentialsOrEmail, password)),
+  logout: () => api.post('/auth/logout'),
+  me: () => api.get('/auth/me'),
   getUser: () => api.get('/user'),
 };
 
@@ -73,23 +79,16 @@ export const authApi = {
 export const uploadApi = {
   uploadImage: (file) => {
     const formData = new FormData();
-    formData.append('image', file);
-    return api.post('/upload/image', formData, {
+    formData.append('file', file);
+    formData.append('type', 'image');
+    return api.post('/admin/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
   uploadImages: (files) => {
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append('images[]', file);
-    });
-    return api.post('/upload/images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    return Promise.all(files.map((file) => uploadApi.uploadImage(file)));
   },
 };
 
@@ -102,6 +101,7 @@ export const adminApi = {
   // Events
   getAllEvents: (params) => api.get('/admin/events', { params }),
   getEvent: (id) => api.get(`/admin/events/${id}`),
+  getEvents: (params) => api.get('/admin/events', { params }),
   createEvent: (data) => api.post('/admin/events', data),
   updateEvent: (id, data) => api.put(`/admin/events/${id}`, data),
   deleteEvent: (id) => api.delete(`/admin/events/${id}`),
@@ -110,9 +110,20 @@ export const adminApi = {
   
   // Bookings
   getAllBookings: (params) => api.get('/admin/bookings', { params }),
+  getBookings: (params) => api.get('/admin/bookings', { params }),
   getBooking: (id) => api.get(`/admin/bookings/${id}`),
   updateBooking: (id, data) => api.put(`/admin/bookings/${id}`, data),
   exportBookings: (params) => api.post('/admin/bookings/export', params),
+
+  // Categories
+  getCategories: () => api.get('/admin/categories'),
+  createCategory: (data) => api.post('/admin/categories', data),
+  updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
+  deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
+
+  // Users
+  getUsers: () => api.get('/admin/users'),
+  toggleAdmin: (id) => api.put(`/admin/users/${id}/toggle-admin`),
 };
 
 export default api;

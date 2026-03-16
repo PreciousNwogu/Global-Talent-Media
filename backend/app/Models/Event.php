@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -87,5 +88,48 @@ class Event extends Model
     public function scopeUpcoming($query)
     {
         return $query->where('starts_at', '>', now());
+    }
+
+    protected function coverImage(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => self::normalizeMediaValue($value),
+            set: fn (?string $value) => self::normalizeMediaValue($value),
+        );
+    }
+
+    protected function videoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => self::normalizeMediaValue($value),
+            set: fn (?string $value) => self::normalizeMediaValue($value),
+        );
+    }
+
+    private static function normalizeMediaValue(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim($value);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://[^/]+(/storage/.*)$#i', $normalized, $matches) === 1) {
+            return $matches[1];
+        }
+
+        if (str_starts_with($normalized, 'storage/')) {
+            return '/' . $normalized;
+        }
+
+        if (str_starts_with($normalized, 'events/')) {
+            return '/storage/' . $normalized;
+        }
+
+        return $normalized;
     }
 }

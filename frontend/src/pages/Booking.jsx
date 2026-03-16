@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { eventsApi, bookingsApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { formatDate, formatCurrency } from '../utils/formatters';
 import Loading from '../components/Common/Loading';
 
 const Booking = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const eventId = searchParams.get('event_id');
 
   const [event, setEvent] = useState(null);
@@ -20,6 +22,17 @@ const Booking = () => {
     special_requests: '',
   });
   const [errors, setErrors] = useState({});
+
+  // Pre-fill form when the logged-in user is available
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        customer_name: user.name || prev.customer_name,
+        customer_email: user.email || prev.customer_email,
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (eventId) {
