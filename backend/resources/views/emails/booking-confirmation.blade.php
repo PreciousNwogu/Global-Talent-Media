@@ -69,7 +69,7 @@
       Your tickets will be confirmed once payment is received.
     </div>
 
-    <a href="{{ env('FRONTEND_URL', 'http://localhost:5173') }}/bookings/{{ $booking->id }}/confirmation?ref={{ $booking->booking_reference }}" class="btn">
+    <a href="{{ config('app.frontend_url') }}/bookings/{{ $booking->booking_reference }}/confirmation" class="btn">
       View Booking &amp; Ticket
     </a>
   </div>

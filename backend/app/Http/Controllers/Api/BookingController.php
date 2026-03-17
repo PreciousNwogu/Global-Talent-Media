@@ -106,9 +106,19 @@ class BookingController extends Controller
                     User::query()->where('is_admin', true)->pluck('email')->all()
                 ))));
 
+                // Fallback to the global from address so at least one admin mailbox is notified.
+                if (empty($adminRecipients)) {
+                    $fallbackRecipient = config('mail.from.address');
+                    if (is_string($fallbackRecipient) && filter_var($fallbackRecipient, FILTER_VALIDATE_EMAIL)) {
+                        $adminRecipients = [$fallbackRecipient];
+                    }
+                }
+
                 if (! empty($adminRecipients)) {
                     Mail::to($adminRecipients)
                         ->send(new AdminBookingConfirmationMail($booking));
+                } else {
+                    Log::warning('Admin booking notification skipped: no valid recipients configured.');
                 }
             } catch (\Exception $mailEx) {
                 Log::warning('Admin booking notification email failed: ' . $mailEx->getMessage());

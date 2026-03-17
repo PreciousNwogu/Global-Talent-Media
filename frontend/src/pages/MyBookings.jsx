@@ -112,7 +112,7 @@ const MyBookings = () => {
               {/* Actions */}
               <div className="flex gap-2">
                 <Link
-                  to={`/bookings/${booking.id}/confirmation?ref=${booking.booking_reference}`}
+                  to={`/bookings/${booking.booking_reference}/confirmation`}
                   className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
                 >
                   View Ticket

@@ -105,7 +105,7 @@ const Booking = () => {
       });
 
       // Navigate to confirmation page with booking reference
-      navigate(`/bookings/${response.data.booking.id}/confirmation?ref=${response.data.booking.booking_reference}`);
+      navigate(`/bookings/${response.data.booking.booking_reference}/confirmation`);
     } catch (error) {
       console.error('Error creating booking:', error);
       if (error.response?.data?.errors) {

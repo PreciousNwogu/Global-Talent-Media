@@ -1,51 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { bookingsApi, paymentsApi } from '../services/api';
 import { formatDate, formatDateTime, formatCurrency } from '../utils/formatters';
 import Loading from '../components/Common/Loading';
 
 const BookingConfirmation = () => {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const reference = searchParams.get('ref'); // Get reference from URL if provided
-  
+  const { id } = useParams(); // id is the booking reference (e.g. GTM-2026-XXXXX)
   const [booking, setBooking] = useState(null);
   const [bankDetails, setBankDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Load by reference (id in URL is actually the booking reference)
-    if (reference || id) {
-      loadBookingByReference();
-    }
-  }, [id, reference]);
-
-  const loadBookingByReference = async () => {
+  const loadBankDetails = async (bookingReference) => {
     try {
-      const bookingRef = reference || id;
-      const response = await bookingsApi.getByReference(bookingRef);
+      const response = await paymentsApi.getBankDetails(bookingReference);
+      setBankDetails(response.data);
+    } catch (error) {
+      console.error('Error loading bank details:', error);
+    }
+  };
+
+  const loadBooking = useCallback(async () => {
+    try {
+      const response = await bookingsApi.getByReference(id);
       setBooking(response.data);
-      // Load bank details using booking reference
       await loadBankDetails(response.data.booking_reference);
       setLoading(false);
     } catch (error) {
       console.error('Error loading booking:', error);
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const loadBankDetails = async (bookingReference) => {
-    try {
-      const response = await paymentsApi.getBankDetails(bookingReference);
-      setBankDetails(response.data);
-      if (response.data.booking && !booking) {
-        setBooking(response.data.booking);
-      }
-    } catch (error) {
-      console.error('Error loading bank details:', error);
-    }
-  };
+  useEffect(() => {
+    if (id) loadBooking();
+  }, [id, loadBooking]);
 
   if (loading) {
     return <Loading />;

@@ -69,7 +69,7 @@
       </tr>
     </table>
 
-    <a href="{{ rtrim(env('APP_URL', 'http://localhost'), '/') }}/admin" class="btn">Open Admin Panel</a>
+    <a href="{{ rtrim(config('app.url'), '/') }}/admin/bookings" class="btn">Open Admin Bookings</a>
   </div>
 
   <div class="footer">

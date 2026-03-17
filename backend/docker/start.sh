@@ -6,6 +6,10 @@ export PORT="${PORT:-8080}"
 
 echo "==> Starting Global Talent Media Hub (port: $PORT)"
 
+# Ensure nginx temp directories exist and are writable by nginx worker user.
+mkdir -p /tmp/nginx/client_temp /tmp/nginx/proxy_temp /tmp/nginx/fastcgi_temp /tmp/nginx/uwsgi_temp /tmp/nginx/scgi_temp
+chown -R www-data:www-data /tmp/nginx
+
 # Parse Render's DATABASE_URL into individual Laravel DB_* vars if DB_HOST is unset
 # Render sets DATABASE_URL as: postgres://user:password@host:port/database
 if [ -n "$DATABASE_URL" ] && [ -z "$DB_HOST" ]; then

@@ -14,6 +14,16 @@ http {
     sendfile        on;
     keepalive_timeout 65;
     client_max_body_size 200M;
+    client_body_timeout 300s;
+
+    # Use explicit writable temp paths for buffered request bodies/uploads.
+    # This avoids nginx 500 errors when default temp paths are not writable
+    # by the configured nginx worker user inside container environments.
+    client_body_temp_path /tmp/nginx/client_temp 1 2;
+    proxy_temp_path       /tmp/nginx/proxy_temp 1 2;
+    fastcgi_temp_path     /tmp/nginx/fastcgi_temp 1 2;
+    uwsgi_temp_path       /tmp/nginx/uwsgi_temp 1 2;
+    scgi_temp_path        /tmp/nginx/scgi_temp 1 2;
 
     access_log /var/log/nginx/access.log;
 
