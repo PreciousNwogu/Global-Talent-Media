@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { adminApi } from '../../services/api';
 
@@ -8,7 +8,7 @@ const Events = () => {
   const [search, setSearch]   = useState('');
   const [msg, setMsg]         = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminApi.getEvents({ search });
@@ -19,9 +19,9 @@ const Events = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const handleSearch = (e) => {
     e.preventDefault();

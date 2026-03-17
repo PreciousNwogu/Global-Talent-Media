@@ -115,4 +115,18 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Notification Recipients
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated recipients used for operational booking notifications.
+    | Example: "ops@example.com,admin@example.com"
+    |
+    */
+    'admin_recipients' => array_values(array_filter(array_map(
+        static fn (string $email) => trim($email),
+        explode(',', (string) env('MAIL_ADMIN_RECIPIENTS', ''))
+    ))),
+
 ];

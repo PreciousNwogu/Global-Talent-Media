@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -49,6 +50,14 @@ class Dashboard extends BaseDashboard
                 ])
                 ->action(function (array $data): void {
                     $user = Auth::user();
+
+                    if (! $user) {
+                        throw ValidationException::withMessages([
+                            'current_password' => 'Authentication required.',
+                        ]);
+                    }
+
+                    assert($user instanceof User);
 
                     if (! Hash::check($data['current_password'], $user->password)) {
                         throw ValidationException::withMessages([

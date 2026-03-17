@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Mail\BookingConfirmationMail;
 use App\Mail\BookingCancellationMail;
+use App\Mail\AdminBookingConfirmationMail;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class BookingController extends Controller
@@ -86,12 +89,29 @@ class BookingController extends Controller
 
             DB::commit();
 
+            $booking->load('event');
+
             // Send confirmation email (silently — don't fail booking if mail fails)
             try {
                 Mail::to($booking->customer_email)
-                    ->send(new BookingConfirmationMail($booking->load('event')));
+                    ->send(new BookingConfirmationMail($booking));
             } catch (\Exception $mailEx) {
-                \Log::warning('Booking confirmation email failed: ' . $mailEx->getMessage());
+                Log::warning('Booking confirmation email failed: ' . $mailEx->getMessage());
+            }
+
+            // Send admin alert email(s) for a new booking.
+            try {
+                $adminRecipients = array_values(array_unique(array_filter(array_merge(
+                    config('mail.admin_recipients', []),
+                    User::query()->where('is_admin', true)->pluck('email')->all()
+                ))));
+
+                if (! empty($adminRecipients)) {
+                    Mail::to($adminRecipients)
+                        ->send(new AdminBookingConfirmationMail($booking));
+                }
+            } catch (\Exception $mailEx) {
+                Log::warning('Admin booking notification email failed: ' . $mailEx->getMessage());
             }
 
             return response()->json([
@@ -191,7 +211,7 @@ class BookingController extends Controller
                 Mail::to($booking->customer_email)
                     ->send(new BookingCancellationMail($booking->load('event')));
             } catch (\Exception $mailEx) {
-                \Log::warning('Booking cancellation email failed: ' . $mailEx->getMessage());
+                Log::warning('Booking cancellation email failed: ' . $mailEx->getMessage());
             }
 
             return response()->json([

@@ -93,11 +93,13 @@ services:
         value: info@globaltalentmediahub.co.uk
       - key: MAIL_FROM_NAME
         value: "Global Talent Media Hub"
+      - key: MAIL_ADMIN_RECIPIENTS
+        value: info@globaltalentmediahub.co.uk
 
       # CORS — same domain (frontend served from same service)
       - key: FRONTEND_URL
-        value: https://gtmh-backend.onrender.com
+        value: https://global-talent-media-w2pd.onrender.com
       - key: SANCTUM_STATEFUL_DOMAINS
-        value: gtmh-backend.onrender.com
+        value: global-talent-media-w2pd.onrender.com
       - key: CORS_ALLOWED_ORIGINS
-        value: https://gtmh-backend.onrender.com
+        value: https://global-talent-media-w2pd.onrender.com

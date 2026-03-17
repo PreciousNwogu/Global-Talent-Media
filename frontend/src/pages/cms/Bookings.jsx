@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminApi } from '../../services/api';
 
 const STATUS_COLORS = {
@@ -14,7 +14,7 @@ const Bookings = () => {
   const [search, setSearch]     = useState('');
   const [msg, setMsg]           = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminApi.getBookings({ search });
@@ -25,9 +25,9 @@ const Bookings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const handleSearch = (e) => {
     e.preventDefault();
