@@ -95,8 +95,16 @@ class BookingController extends Controller
             try {
                 Mail::to($booking->customer_email)
                     ->send(new BookingConfirmationMail($booking));
+
+                Log::info('Booking confirmation email sent.', [
+                    'booking_reference' => $booking->booking_reference,
+                    'recipient' => $booking->customer_email,
+                ]);
             } catch (\Exception $mailEx) {
-                Log::warning('Booking confirmation email failed: ' . $mailEx->getMessage());
+                Log::warning('Booking confirmation email failed: ' . $mailEx->getMessage(), [
+                    'booking_reference' => $booking->booking_reference,
+                    'recipient' => $booking->customer_email,
+                ]);
             }
 
             // Send admin alert email(s) for a new booking.
@@ -117,11 +125,19 @@ class BookingController extends Controller
                 if (! empty($adminRecipients)) {
                     Mail::to($adminRecipients)
                         ->send(new AdminBookingConfirmationMail($booking));
+
+                    Log::info('Admin booking notification email sent.', [
+                        'booking_reference' => $booking->booking_reference,
+                        'recipients' => $adminRecipients,
+                    ]);
                 } else {
                     Log::warning('Admin booking notification skipped: no valid recipients configured.');
                 }
             } catch (\Exception $mailEx) {
-                Log::warning('Admin booking notification email failed: ' . $mailEx->getMessage());
+                Log::warning('Admin booking notification email failed: ' . $mailEx->getMessage(), [
+                    'booking_reference' => $booking->booking_reference,
+                    'recipients' => $adminRecipients ?? [],
+                ]);
             }
 
             return response()->json([

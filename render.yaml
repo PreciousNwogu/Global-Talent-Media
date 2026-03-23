@@ -85,6 +85,8 @@ services:
         value: "587"
       - key: MAIL_ENCRYPTION
         value: tls
+      - key: MAIL_EHLO_DOMAIN
+        value: globaltalentmediahub.co.uk
       - key: MAIL_USERNAME
         value: info@globaltalentmediahub.co.uk
       - key: MAIL_PASSWORD
