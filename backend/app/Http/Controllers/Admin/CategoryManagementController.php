@@ -18,6 +18,12 @@ class CategoryManagementController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (!$request->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot create categories from the client dashboard.',
+            ], 403);
+        }
+
         $data = $request->validate([
             'name'        => 'required|string|max:255|unique:categories,name',
             'description' => 'nullable|string',
@@ -31,6 +37,12 @@ class CategoryManagementController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
+        if (!$request->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot edit categories from the client dashboard.',
+            ], 403);
+        }
+
         $category = Category::findOrFail($id);
 
         $data = $request->validate([
@@ -46,6 +58,12 @@ class CategoryManagementController extends Controller
 
     public function destroy(string $id): JsonResponse
     {
+        if (!request()->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot delete categories from the client dashboard.',
+            ], 403);
+        }
+
         $category = Category::findOrFail($id);
 
         if ($category->events()->count() > 0) {

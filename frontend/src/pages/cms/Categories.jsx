@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const blankForm = { name: '', description: '', color: '#3B82F6', icon: '🎭' };
 
 const Categories = () => {
+  const { user } = useAuth();
+  const canManage = !!user?.is_full_admin;
   const [cats, setCats]         = useState([]);
   const [form, setForm]         = useState(blankForm);
-  const [editing, setEditing]   = useState(null); // id being edited
+  const [editing, setEditing]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [msg, setMsg]           = useState({ text: '', type: '' });
 
@@ -75,67 +78,72 @@ const Categories = () => {
         </div>
       )}
 
-      {/* Form */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          {editing ? 'Edit Category' : 'New Category'}
-        </h2>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Icon (emoji)</label>
-            <input
-              value={form.icon}
-              onChange={(e) => setForm({ ...form, icon: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <input
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-end gap-4">
+      {canManage ? (
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {editing ? 'Edit Category' : 'New Category'}
+          </h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setForm({ ...form, color: e.target.value })}
-                className="h-10 w-16 cursor-pointer rounded"
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="flex gap-2 ml-auto">
-              {editing && (
-                <button
-                  type="button"
-                  onClick={() => { setEditing(null); setForm(blankForm); }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              )}
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-              >
-                {editing ? 'Update' : 'Create'}
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icon (emoji)</label>
+              <input
+                value={form.icon}
+                onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-          </div>
-        </form>
-      </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <input
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex items-end gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                <input
+                  type="color"
+                  value={form.color}
+                  onChange={(e) => setForm({ ...form, color: e.target.value })}
+                  className="h-10 w-16 cursor-pointer rounded"
+                />
+              </div>
+              <div className="flex gap-2 ml-auto">
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditing(null); setForm(blankForm); }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                >
+                  {editing ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="bg-blue-50 text-blue-700 text-sm px-4 py-3 rounded-lg">
+          Read-only mode: CMS admins can view categories but cannot create, edit, or delete them.
+        </div>
+      )}
 
       {/* List */}
       {loading ? (
@@ -158,10 +166,12 @@ const Categories = () => {
                   <p className="text-xs text-gray-300">{cat.events_count} events</p>
                 )}
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => startEdit(cat)} className="text-xs text-blue-600 hover:underline">Edit</button>
-                <button onClick={() => handleDelete(cat.id, cat.name)} className="text-xs text-red-600 hover:underline">Del</button>
-              </div>
+              {canManage && (
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => startEdit(cat)} className="text-xs text-blue-600 hover:underline">Edit</button>
+                  <button onClick={() => handleDelete(cat.id, cat.name)} className="text-xs text-red-600 hover:underline">Del</button>
+                </div>
+              )}
             </div>
           ))}
           {cats.length === 0 && (

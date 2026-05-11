@@ -102,6 +102,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         return response()->json(\App\Models\User::select('id','name','email','is_admin','created_at')->get());
     });
     Route::put('/users/{id}/toggle-admin', function ($id) {
+        if (!request()->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot change admin roles from the client dashboard.',
+            ], 403);
+        }
+
         $user = \App\Models\User::findOrFail($id);
         $user->update(['is_admin' => !$user->is_admin]);
         return response()->json(['message' => 'Updated', 'user' => $user]);

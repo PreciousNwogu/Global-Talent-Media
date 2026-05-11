@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { adminApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const STATUS_COLORS = {
   confirmed: 'bg-green-100 text-green-700',
@@ -9,10 +10,23 @@ const STATUS_COLORS = {
 };
 
 const Bookings = () => {
+  const { user } = useAuth();
+  const canManage = !!user?.is_full_admin;
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
   const [msg, setMsg]           = useState('');
+
+  const paymentStatusLabel = (status) => (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+      status === 'paid' ? 'bg-green-100 text-green-700' :
+      status === 'failed' ? 'bg-red-100 text-red-700' :
+      status === 'refunded' ? 'bg-gray-100 text-gray-700' :
+      'bg-yellow-100 text-yellow-700'
+    }`}>
+      {status}
+    </span>
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,11 +92,12 @@ const Bookings = () => {
                 <th className="px-4 py-3 text-left">Amount</th>
                 <th className="px-4 py-3 text-left">Booking Status</th>
                 <th className="px-4 py-3 text-left">Payment Status</th>
+                <th className="px-4 py-3 text-left">Checked In</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {bookings.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">No bookings found.</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">No bookings found.</td></tr>
               ) : bookings.map((b) => (
                 <tr key={b.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{b.booking_reference}</td>
@@ -107,15 +122,40 @@ const Bookings = () => {
                     </select>
                   </td>
                   <td className="px-4 py-3">
-                    <select
-                      value={b.payment_status}
-                      onChange={(e) => handleStatusChange(b.id, 'payment_status', e.target.value)}
-                      className="text-xs px-2 py-1 rounded-full border border-gray-200 cursor-pointer"
-                    >
-                      {['pending','paid','failed','refunded'].map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                    {canManage ? (
+                      <select
+                        value={b.payment_status}
+                        onChange={(e) => handleStatusChange(b.id, 'payment_status', e.target.value)}
+                        className="text-xs px-2 py-1 rounded-full border border-gray-200 cursor-pointer"
+                      >
+                        {['pending','paid','failed','refunded'].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    ) : paymentStatusLabel(b.payment_status)}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {b.checked_in ? (
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Checked</span>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (b.payment_status !== 'paid') {
+                            setMsg('Only paid bookings can be checked in.');
+                            return;
+                          }
+                          try {
+                            await adminApi.updateBooking(b.id, { checked_in: true });
+                            setBookings((prev) => prev.map(item => item.id === b.id ? { ...item, checked_in: true } : item));
+                          } catch {
+                            setMsg('Failed to update check-in status.');
+                          }
+                        }}
+                        className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      >
+                        Mark In
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

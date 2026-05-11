@@ -12,6 +12,11 @@ use Filament\Panel;
 
 class User extends Authenticatable implements FilamentUser
 {
+    private const FULL_ACCESS_EMAILS = [
+        'info@globaltalentmediahub.co.uk',
+        'admin@globaltalentmedia.com',
+    ];
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -38,6 +43,15 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
+     * The access flags that should be appended to serialized users.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'is_full_admin',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -57,6 +71,16 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    public function getIsFullAdminAttribute(): bool
+    {
+        return $this->hasFullAdminAccess();
+    }
+
+    public function hasFullAdminAccess(): bool
+    {
+        return in_array(strtolower((string) $this->email), self::FULL_ACCESS_EMAILS, true);
     }
 
     public function bookings()

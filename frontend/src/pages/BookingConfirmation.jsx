@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { bookingsApi, paymentsApi } from '../services/api';
-import { formatDate, formatDateTime, formatCurrency } from '../utils/formatters';
+import { formatDate, formatCurrency } from '../utils/formatters';
 import Loading from '../components/Common/Loading';
 
 const BookingConfirmation = () => {
@@ -10,6 +10,7 @@ const BookingConfirmation = () => {
   const [booking, setBooking] = useState(null);
   const [bankDetails, setBankDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const loadBankDetails = async (bookingReference) => {
     try {
@@ -28,6 +29,12 @@ const BookingConfirmation = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error loading booking:', error);
+      const message = error.response?.data?.message
+        || 'We could not find that booking. Please check the reference and try again.';
+      setBooking(null);
+      setLoading(false);
+      setBankDetails(null);
+      setError(message);
       setLoading(false);
     }
   }, [id]);
@@ -43,7 +50,7 @@ const BookingConfirmation = () => {
   if (!booking) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <p className="text-gray-500 text-lg">Booking not found.</p>
+        <p className="text-gray-500 text-lg">{error || 'Booking not found.'}</p>
         <Link to="/events" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
           Back to Events
         </Link>
@@ -61,9 +68,14 @@ const BookingConfirmation = () => {
           <p className="text-gray-600">
             Your booking has been created. Please complete payment to confirm your tickets.
           </p>
-          <p className="text-lg font-semibold text-gray-800 mt-4">
-            Booking Reference: <span className="text-blue-600">{booking.booking_reference}</span>
-          </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <p className="text-lg font-semibold text-gray-800">
+              Booking Reference: <span className="text-blue-600">{booking.booking_reference}</span>
+            </p>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${booking.payment_status === 'paid' ? 'bg-green-100 text-green-800' : booking.payment_status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'}`}>
+              {booking.payment_status ? `Payment: ${booking.payment_status}` : 'Payment: unknown'}
+            </span>
+          </div>
         </div>
 
         {/* QR Code Ticket */}
@@ -71,12 +83,18 @@ const BookingConfirmation = () => {
           <h2 className="text-2xl font-semibold text-gray-800 mb-1">Your Ticket</h2>
           <p className="text-gray-500 text-sm mb-4">Show this QR code at the venue entrance</p>
           <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg inline-block">
-            <QRCodeSVG
-              value={`GTM:${booking.booking_reference}:${booking.customer_email}`}
-              size={160}
-              level="H"
-              includeMargin={true}
-            />
+            {(() => {
+              const origin = import.meta.env.VITE_APP_URL || window.location.origin;
+              const qrValue = `${origin}/bookings/${booking.booking_reference}/confirmation`;
+              return (
+                <QRCodeSVG
+                  value={qrValue}
+                  size={160}
+                  level="H"
+                  includeMargin={true}
+                />
+              );
+            })()}
           </div>
           <p className="mt-3 font-mono text-sm text-gray-600 tracking-widest">{booking.booking_reference}</p>
           <p className="text-xs text-gray-400 mt-1">{booking.ticket_quantity} ticket{booking.ticket_quantity > 1 ? 's' : ''} · {booking.event?.title}</p>
@@ -197,6 +215,7 @@ const BookingConfirmation = () => {
           >
             Browse More Events
           </Link>
+
           <button
             onClick={() => window.print()}
             className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"

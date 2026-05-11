@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { adminApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const Events = () => {
+  const { user } = useAuth();
+  const canManage = !!user?.is_full_admin;
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
@@ -57,13 +60,21 @@ const Events = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Events</h1>
-        <Link
-          to="/cms/events/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-        >
-          + New Event
-        </Link>
+        {canManage && (
+          <Link
+            to="/cms/events/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+          >
+            + New Event
+          </Link>
+        )}
       </div>
+
+      {!canManage && (
+        <div className="bg-blue-50 text-blue-700 text-sm px-4 py-3 rounded-lg">
+          Read-only mode: event creation, editing, publishing, and deletion are disabled for CMS admins.
+        </div>
+      )}
 
       {msg && (
         <div className="bg-blue-50 text-blue-700 text-sm px-4 py-2 rounded-lg">{msg}</div>
@@ -95,13 +106,13 @@ const Events = () => {
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Price</th>
                 <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                {canManage && <th className="px-4 py-3 text-left">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {events.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-400">No events found.</td>
+                  <td colSpan={canManage ? 6 : 5} className="text-center py-8 text-gray-400">No events found.</td>
                 </tr>
               ) : events.map((ev) => (
                 <tr key={ev.id} className="hover:bg-gray-50">
@@ -121,24 +132,26 @@ const Events = () => {
                       ev.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                     }`}>{ev.status}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        to={`/cms/events/${ev.id}/edit`}
-                        className="text-blue-600 hover:underline text-xs"
-                      >Edit</Link>
-                      <button
-                        onClick={() => handlePublish(ev.id, ev.status === 'published')}
-                        className="text-xs text-yellow-600 hover:underline"
-                      >
-                        {ev.status === 'published' ? 'Unpublish' : 'Publish'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(ev.id, ev.title)}
-                        className="text-xs text-red-600 hover:underline"
-                      >Delete</button>
-                    </div>
-                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to={`/cms/events/${ev.id}/edit`}
+                          className="text-blue-600 hover:underline text-xs"
+                        >Edit</Link>
+                        <button
+                          onClick={() => handlePublish(ev.id, ev.status === 'published')}
+                          className="text-xs text-yellow-600 hover:underline"
+                        >
+                          {ev.status === 'published' ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ev.id, ev.title)}
+                          className="text-xs text-red-600 hover:underline"
+                        >Delete</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

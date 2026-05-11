@@ -45,6 +45,12 @@ class EventManagementController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        if (!$request->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot create events from the client dashboard.',
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -98,6 +104,12 @@ class EventManagementController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        if (!$request->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot edit events from the client dashboard.',
+            ], 403);
+        }
+
         $event = Event::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -146,6 +158,12 @@ class EventManagementController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
+        if (!request()->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot delete events from the client dashboard.',
+            ], 403);
+        }
+
         $event = Event::findOrFail($id);
         $event->delete();
 
@@ -159,6 +177,12 @@ class EventManagementController extends Controller
      */
     public function publish(string $id): JsonResponse
     {
+        if (!request()->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot publish events from the client dashboard.',
+            ], 403);
+        }
+
         $event = Event::findOrFail($id);
         $event->update(['status' => 'published']);
 
@@ -173,6 +197,12 @@ class EventManagementController extends Controller
      */
     public function unpublish(string $id): JsonResponse
     {
+        if (!request()->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot unpublish events from the client dashboard.',
+            ], 403);
+        }
+
         $event = Event::findOrFail($id);
         $event->update(['status' => 'draft']);
 

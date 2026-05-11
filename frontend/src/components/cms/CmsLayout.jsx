@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const nav = [
   { to: '/cms',             label: 'Dashboard',   icon: '📊', exact: true },
+  { to: '/staff/entrance',  label: 'Check-In',    icon: '🚪' },
   { to: '/cms/events',      label: 'Events',       icon: '🎭' },
   { to: '/cms/bookings',    label: 'Bookings',     icon: '🎟️' },
   { to: '/cms/categories',  label: 'Categories',   icon: '🏷️' },

@@ -50,14 +50,22 @@ const Header = () => {
               </>
             )}
             {user?.is_admin && (
-              <a
-                href={`${window.location.origin.replace(/\/$/, '')}/admin`}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-violet-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-violet-700 transition-colors"
-              >
-                Admin Panel
-              </a>
+              <>
+                <Link
+                  to="/cms"
+                  className="bg-emerald-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  CMS Dashboard
+                </Link>
+                <a
+                  href={`${window.location.origin.replace(/\/$/, '')}/admin`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-violet-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-violet-700 transition-colors"
+                >
+                  Admin Panel
+                </a>
+              </>
             )}
           </div>
         </div>

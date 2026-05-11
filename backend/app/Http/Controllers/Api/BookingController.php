@@ -192,7 +192,13 @@ class BookingController extends Controller
     {
         $booking = Booking::with(['event', 'payment'])
             ->where('booking_reference', $reference)
-            ->firstOrFail();
+            ->first();
+
+        if (! $booking) {
+            return response()->json([
+                'message' => 'We could not find a booking for that reference. Please check the code and try again.',
+            ], 404);
+        }
 
         return response()->json($booking);
     }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { adminApi } from '../../services/api';
-import { categoriesApi } from '../../services/api';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { adminApi, categoriesApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const blankForm = {
   title: '', description: '', category_id: '',
@@ -12,13 +12,15 @@ const blankForm = {
 };
 
 const EventForm = () => {
-  const { id } = useParams();          // undefined = create mode
+  const { user } = useAuth();
+  const canManage = !!user?.is_full_admin;
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [form, setForm]       = useState(blankForm);
-  const [cats, setCats]       = useState([]);
+  const [form, setForm] = useState(blankForm);
+  const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(!!id);
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     categoriesApi.getAll().then((r) => {
@@ -32,20 +34,20 @@ const EventForm = () => {
         const ev = (Array.isArray(all) ? all : all.data ?? []).find((e) => String(e.id) === id);
         if (ev) {
           setForm({
-            title:                ev.title ?? '',
-            description:          ev.description ?? '',
-            category_id:          ev.category_id ?? '',
-            starts_at:            ev.starts_at ? ev.starts_at.slice(0, 16) : '',
-            ends_at:              ev.ends_at   ? ev.ends_at.slice(0, 16)   : '',
-            ticket_price:         ev.ticket_price ?? '',
-            capacity:             ev.capacity ?? '',
-            venue_name:           ev.venue_name ?? '',
-            venue_address:        ev.venue_address ?? '',
-            city:                 ev.city ?? '',
-            country:              ev.country ?? '',
-            cover_image:          ev.cover_image ?? '',
-            video_url:            ev.video_url ?? '',
-            is_featured:          !!ev.is_featured,
+            title: ev.title ?? '',
+            description: ev.description ?? '',
+            category_id: ev.category_id ?? '',
+            starts_at: ev.starts_at ? ev.starts_at.slice(0, 16) : '',
+            ends_at: ev.ends_at ? ev.ends_at.slice(0, 16) : '',
+            ticket_price: ev.ticket_price ?? '',
+            capacity: ev.capacity ?? '',
+            venue_name: ev.venue_name ?? '',
+            venue_address: ev.venue_address ?? '',
+            city: ev.city ?? '',
+            country: ev.country ?? '',
+            cover_image: ev.cover_image ?? '',
+            video_url: ev.video_url ?? '',
+            is_featured: !!ev.is_featured,
             terms_and_conditions: ev.terms_and_conditions ?? '',
           });
         }
@@ -59,7 +61,6 @@ const EventForm = () => {
     setForm((prev) => ({ ...prev, [field]: val }));
   };
 
-  // Upload a local file to the backend and return the public URL
   const uploadFile = async (file, type = 'image') => {
     const token = localStorage.getItem('auth_token');
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
@@ -92,7 +93,6 @@ const EventForm = () => {
     return json.url;
   };
 
-  // A field that uploads media from device only.
   const MediaField = ({ label, field, accept = 'image/*', type = 'image' }) => {
     const [uploading, setUploading] = useState(false);
     const [uploadErr, setUploadErr] = useState('');
@@ -125,13 +125,10 @@ const EventForm = () => {
           {uploading && <span className="text-xs text-blue-500 animate-pulse">Uploading…</span>}
         </div>
 
-        <p className="text-xs text-gray-500">
-          Upload from your device. URL input is disabled.
-        </p>
+        <p className="text-xs text-gray-500">Upload from your device. URL input is disabled.</p>
 
         {uploadErr && <p className="text-xs text-red-500">{uploadErr}</p>}
 
-        {/* Preview */}
         {form[field] && type === 'image' && (
           <img src={form[field]} alt="preview" className="mt-1 h-28 w-auto rounded-lg object-cover border border-gray-200" />
         )}
@@ -167,25 +164,19 @@ const EventForm = () => {
 
   if (loading) return <p className="text-gray-400 animate-pulse">Loading event…</p>;
 
-  const Field = ({ label, children, required }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-
-  const input = (field, type = 'text', { placeholder, required } = {}) => (
-    <input
-      type={type}
-      required={required}
-      placeholder={placeholder}
-      value={form[field]}
-      onChange={set(field)}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  );
+  if (!canManage) {
+    return (
+      <div className="max-w-2xl space-y-4">
+        <h1 className="text-2xl font-bold text-gray-800">{id ? 'Edit Event' : 'New Event'}</h1>
+        <div className="bg-yellow-50 text-yellow-800 text-sm px-4 py-3 rounded-lg">
+          CMS admins have read-only access to events. Event creation, editing, publishing, and deletion are disabled here.
+        </div>
+        <Link to="/cms/events" className="inline-flex px-4 py-2 rounded-lg bg-gray-900 text-white text-sm hover:bg-gray-800">
+          Back to Events
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -194,19 +185,30 @@ const EventForm = () => {
       {error && <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-5">
-        {/* Basic */}
-        <Field label="Title" required>{input('title', 'text', { required: true })}</Field>
-        <Field label="Description">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500 ml-0.5">*</span></label>
+          <input
+            type="text"
+            required
+            value={form.title}
+            onChange={set('title')}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
             rows={4}
             value={form.description}
             onChange={set('description')}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </Field>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Category">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
             <select
               value={form.category_id}
               onChange={set('category_id')}
@@ -217,42 +219,104 @@ const EventForm = () => {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-          </Field>
-          <Field label="Ticket Price ($)" required>{input('ticket_price', 'number', { required: true })}</Field>
-          <Field label="Capacity">{input('capacity', 'number')}</Field>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ticket Price ($) <span className="text-red-500 ml-0.5">*</span></label>
+            <input
+              type="number"
+              required
+              value={form.ticket_price}
+              onChange={set('ticket_price')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+            <input
+              type="number"
+              value={form.capacity}
+              onChange={set('capacity')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        {/* Media */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <MediaField label="Cover Image" field="cover_image" accept="image/*" type="image" />
           <MediaField label="Promo Video" field="video_url" accept="video/*" type="video" />
         </div>
 
-        {/* Date/times */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Start Date &amp; Time" required>{input('starts_at', 'datetime-local', { required: true })}</Field>
-          <Field label="End Date &amp; Time">{input('ends_at', 'datetime-local')}</Field>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date &amp; Time <span className="text-red-500 ml-0.5">*</span></label>
+            <input
+              type="datetime-local"
+              required
+              value={form.starts_at}
+              onChange={set('starts_at')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Date &amp; Time</label>
+            <input
+              type="datetime-local"
+              value={form.ends_at}
+              onChange={set('ends_at')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        {/* Venue */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Venue Name">{input('venue_name')}</Field>
-          <Field label="City">{input('city')}</Field>
-          <Field label="Country">{input('country')}</Field>
-          <Field label="Venue Address">{input('venue_address')}</Field>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
+            <input
+              type="text"
+              value={form.venue_name}
+              onChange={set('venue_name')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+            <input
+              type="text"
+              value={form.city}
+              onChange={set('city')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+            <input
+              type="text"
+              value={form.country}
+              onChange={set('country')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Venue Address</label>
+            <input
+              type="text"
+              value={form.venue_address}
+              onChange={set('venue_address')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        {/* Terms */}
-        <Field label="Terms &amp; Conditions">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
           <textarea
             rows={3}
             value={form.terms_and_conditions}
             onChange={set('terms_and_conditions')}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </Field>
+        </div>
 
-        {/* Featured */}
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -263,7 +327,6 @@ const EventForm = () => {
           <span className="text-sm font-medium text-gray-700">Mark as Featured</span>
         </label>
 
-        {/* Actions */}
         <div className="flex gap-3 pt-2">
           <button
             type="button"

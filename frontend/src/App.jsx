@@ -17,6 +17,7 @@ import CmsEventForm from './pages/cms/EventForm';
 import CmsBookings from './pages/cms/Bookings';
 import CmsCategories from './pages/cms/Categories';
 import CmsUsers from './pages/cms/Users';
+import StaffEntrance from './pages/StaffEntrance';
 
 // Wrapper: CMS pages skip the public Layout and use CmsLayout instead
 const CmsPage = ({ children }) => (
@@ -57,6 +58,7 @@ function App() {
 
         {/* CMS - full-screen admin panel, no public Layout */}
         <Route path="/cms" element={<CmsPage><CmsDashboard /></CmsPage>} />
+        <Route path="/staff/entrance" element={<AdminRoute><StaffEntrance /></AdminRoute>} />
         <Route path="/cms/events" element={<CmsPage><CmsEvents /></CmsPage>} />
         <Route path="/cms/events/new" element={<CmsPage><CmsEventForm /></CmsPage>} />
         <Route path="/cms/events/:id/edit" element={<CmsPage><CmsEventForm /></CmsPage>} />

@@ -24,11 +24,15 @@ class Booking extends Model
         'payment_status',
         'payment_id',
         'special_requests',
+        'checked_in',
+        'checked_in_at',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'ticket_quantity' => 'integer',
+        'checked_in' => 'boolean',
+        'checked_in_at' => 'datetime',
     ];
 
     /**

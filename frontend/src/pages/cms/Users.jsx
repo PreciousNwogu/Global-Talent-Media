@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Users = () => {
   const { user: currentUser } = useAuth();
+  const canManage = !!currentUser?.is_full_admin;
   const [users, setUsers]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg]         = useState({ text: '', type: '' });
@@ -48,6 +49,12 @@ const Users = () => {
         </div>
       )}
 
+      {!canManage && (
+        <div className="bg-blue-50 text-blue-700 text-sm px-4 py-3 rounded-lg">
+          Read-only mode: CMS admins can view users but cannot change admin roles.
+        </div>
+      )}
+
       {loading ? (
         <p className="text-gray-400 animate-pulse">Loading…</p>
       ) : (
@@ -59,12 +66,12 @@ const Users = () => {
                 <th className="px-4 py-3 text-left">Email</th>
                 <th className="px-4 py-3 text-left">Role</th>
                 <th className="px-4 py-3 text-left">Joined</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                {canManage && <th className="px-4 py-3 text-left">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {users.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-gray-400">No users found.</td></tr>
+                <tr><td colSpan={canManage ? 5 : 4} className="text-center py-8 text-gray-400">No users found.</td></tr>
               ) : users.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{u.name}</td>
@@ -79,20 +86,22 @@ const Users = () => {
                   <td className="px-4 py-3 text-gray-400">
                     {new Date(u.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3">
-                    {u.id !== currentUser?.id ? (
-                      <button
-                        onClick={() => handleToggleAdmin(u.id, u.name, u.is_admin)}
-                        className={`text-xs font-medium hover:underline ${
-                          u.is_admin ? 'text-red-500' : 'text-purple-600'
-                        }`}
-                      >
-                        {u.is_admin ? 'Remove Admin' : 'Make Admin'}
-                      </button>
-                    ) : (
-                      <span className="text-xs text-gray-300">You</span>
-                    )}
-                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3">
+                      {u.id !== currentUser?.id ? (
+                        <button
+                          onClick={() => handleToggleAdmin(u.id, u.name, u.is_admin)}
+                          className={`text-xs font-medium hover:underline ${
+                            u.is_admin ? 'text-red-500' : 'text-purple-600'
+                          }`}
+                        >
+                          {u.is_admin ? 'Remove Admin' : 'Make Admin'}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-300">You</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

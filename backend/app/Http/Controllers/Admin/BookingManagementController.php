@@ -65,10 +65,23 @@ class BookingManagementController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
+        if ($request->has('payment_status') && !$request->user()?->hasFullAdminAccess()) {
+            return response()->json([
+                'message' => 'CMS admins cannot change payment status from the client dashboard.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'booking_status' => 'sometimes|in:pending,confirmed,cancelled,refunded',
-            'payment_status' => 'sometimes|in:pending,paid,failed,refunded',
+            'checked_in' => 'sometimes|boolean',
         ]);
+
+        // Automatically set checked_in_at when marking as checked in
+        if (isset($validated['checked_in']) && $validated['checked_in'] && !$booking->checked_in_at) {
+            $validated['checked_in_at'] = now();
+        } elseif (isset($validated['checked_in']) && !$validated['checked_in']) {
+            $validated['checked_in_at'] = null;
+        }
 
         $booking->update($validated);
 

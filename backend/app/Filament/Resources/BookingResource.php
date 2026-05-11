@@ -139,6 +139,15 @@ class BookingResource extends Resource
                         'gray'    => 'refunded',
                     ]),
 
+                Tables\Columns\BadgeColumn::make('checked_in')
+                    ->label('Checked In')
+                    ->sortable()
+                    ->colors([
+                        'success' => true,
+                        'secondary' => false,
+                    ])
+                    ->formatStateUsing(fn ($state) => $state ? 'Checked In' : 'Not Checked'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime('M j, Y')
                     ->sortable()
